@@ -3,6 +3,7 @@
 from odoo import models, fields, api
 from odoo.exceptions import UserError
 
+
 class TodoTask(models.Model):
     _name = 'todo.task'
     _description = '我的待办'
@@ -16,8 +17,9 @@ class TodoTask(models.Model):
         ('normal', '普通'),
         ('urgency', '紧急')
     ], default='normal', required=True, string='紧急程度')
-    is_expired = fields.Boolean(u'已过期', compute='_compute_is_expired', readonly=True)
-    deadline = fields.Date(u'截止时间')
+    is_expired = fields.Boolean(u'已过期', default=False, compute='_compute_is_expired', readonly=True)
+    count_expired = fields.Integer(u'超期数量', compute='_compute_count_expired', readonly=True)
+    deadline = fields.Datetime(u'截止时间')
     create_date = fields.Date(u'创建日期', required=True, readonly=True, index=True, default=fields.Date.today)
     creator_id = fields.Many2one('res.users', string='安排人', default=lambda s: s.env.uid, required=True, readonly=True)
     coordinator_id = fields.Many2one('res.users', string='协调人', default=lambda s: s.env.uid)
@@ -112,9 +114,17 @@ class TodoTask(models.Model):
     def _compute_is_expired(self):
         for record in self:
             if record.deadline:
-                record.is_expired = record.deadline < fields.Date.today()
+                record.is_expired = record.deadline < fields.Datetime.now()
             else:
                 record.is_expired = False
+
+    @api.depends('deadline')
+    @api.multi
+    def _compute_count_expired(self):
+        for record in self:
+            if record.deadline:
+                if record.deadline < fields.Datetime.now():
+                    record.count_expired += 1
 
 
 class TodoCategory(models.Model):
