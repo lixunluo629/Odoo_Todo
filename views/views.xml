@@ -1,0 +1,150 @@
+<odoo>
+    <data>
+        <record id="todo_task_view_tree" model="ir.ui.view">
+            <field name="name">todo.task.view_tree</field>
+            <field name="model">todo.task</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree string="Todo" decoration-danger="is_expired" import="false">
+                    <field name="category_id"/>
+                    <field name="name"/>
+                    <field name="coordinator_id"/>
+                    <field name="executor_id"/>
+                    <field name="priority"/>
+                    <field name="deadline"/>
+                    <field name="request_state"/>
+                    <field name="task_state"/>
+                    <field name="activate" invisible="True"/>
+                    <field name="is_expired" invisible="True"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="todo_task_view_form" model="ir.ui.view">
+            <field name="name">todo.task.view_form</field>
+            <field name="model">todo.task</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Todo">
+                    <header>
+                        <button name="action_permitted" attrs="{'invisible':['|',('permit_state','!=','nopermit'),('request_permit','!=',True)]}" type="object" string="审核通过" confirm="确认通过审核？" groups="todo.group_todo_coordinator,todo.group_todo_manager"/>
+                        <button name="action_refuse" attrs="{'invisible':['|',('permit_state','!=','nopermit'),('permit_state','!=','permitted'),('request_permit','!=',True)]}" type="object" string="驳回申请" groups="todo.group_todo_coordinator,todo.group_todo_manager"/>
+                        <field name="permit_state" widget="statusbar" statubar_visible="refuse,nopermit,permitted" attrs="{'invisible':[('request_permit','!=',True)]}" class="oe_right" groups="todo.group_todo_coordinator,todo.group_todo_manager"/>
+
+                        <button name="action_review" attrs="{'invisible':[('request_state','!=','submit')]}" type="object" string="提交完成" confirm="确认提交？" groups="todo.group_todo_employee"/>
+                        <button name="action_submit" attrs="{'invisible':[('request_state','!=','review')]}" type="object" string="取消提交" groups="todo.group_todo_employee"/>
+                        <field name="request_state" widget="statusbar" statubar_visible="submit,review,permit" class="oe_right" groups="todo.group_todo_employee"/>
+
+                        <button name="action_arrange" attrs="{'invisible':['|',('task_state','!=','draft'),('request_state','=','review')]}" type="object" string="提交安排" groups="todo.group_todo_coordinator,todo.group_todo_manager"/>
+                        <button name="action_draft" attrs="{'invisible':['|',('task_state','!=','arrange'),('request_state','=','review')]}" type="object" string="撤回安排" groups="todo.group_todo_coordinator,todo.group_todo_manager"/>
+                        <field name="task_state" widget="statusbar" statubar_visible="draft,arrange,done,cancel" class="oe_right" attrs="{'invisible':[('request_permit','=',True)]}" groups="todo.group_todo_coordinator,todo.group_todo_manager"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group colspan="2">
+                                <field name="name" attrs="{'readonly':[('activate','=',True)]}"/>
+                            </group>
+                            <group>
+                                <field name="coordinator_id" options="{'no_create_edit': 1}" attrs="{'readonly':[('activate','=',True)]}"/>
+                                <field name="executor_id" options="{'no_create_edit': 1}" attrs="{'readonly':[('activate','=',True)]}"/>
+                            </group>
+                            <group>
+                                <field name="category_id" attrs="{'readonly':[('activate','=',True)]}"/>
+                                <field name="priority" attrs="{'readonly':[('activate','=',True)]}"/>
+                                <field name="deadline" attrs="{'readonly':[('activate','=',True)]}"/>
+                                <field name="activate" invisible="True"/>
+                                <field name="request_permit" invisible="True"/>
+                                <field name="get_permit" invisible="True"/>
+                            </group>
+                        </group>
+                        <notebook colspan="4">
+                            <page string="详细内容" autofocus="autofocus">
+                                <field name="content" attrs="{'readonly':[('activate','=',True)]}"/>
+                            </page>
+                        </notebook>
+                        <notebook colspan="4">
+                            <page string="进度汇报" autofocus="autofocus">
+                                <field name="progress_report" attrs="{'readonly':['|',('activate','!=',True),('request_permit','=',True)]}"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="todo_category_view_tree" model="ir.ui.view">
+            <field name="name">todo.category.view_tree</field>
+            <field name="model">todo.category</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree string="Todo Category" editable="bottom">
+                    <field name="name"/>
+                    <field name="count"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="todo_category_view_form" model="ir.ui.view">
+            <field name="name">todo.category.view_form</field>
+            <field name="model">todo.category</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Todo Category">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="todo_security_view_tree">
+            <field name="name">todo.security</field>
+            <field name="inherit_id" ref="base.view_server_action_tree"/>
+            <field name="model">ir.actions.server</field>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='sequence']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='state']" position="replace">
+                    <field name="groups_id" widget="many2many_tags" domain="[('category_id','=',61)]"/>
+                </xpath>
+                <xpath expr="//field[@name='model_id']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='usage']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="view_server_action_form_groups">
+            <field name="name">ir.actions.server.group</field>
+            <field name="inherit_id" ref="base.view_server_action_form"/>
+            <field name="model">ir.actions.server</field>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook" position="inside">
+                    <page string="Security" name="security">
+                        <field name="groups_id" widget="many2many_tags" domain="[('category_id','=',61)]"/>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="todo_rule_view_list">
+            <field name="name">todo.rule.view_tree</field>
+            <field name="model">res.groups</field>
+            <field name="arch" type="xml">
+                <tree string="Todo rule" editable="bottom" delete="false">
+                    <field name="full_name"/>
+                    <field name="users" widget="many2many_tags"/>
+                </tree>
+            </field>
+        </record>
+
+
+    </data>
+</odoo>
