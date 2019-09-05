@@ -9,7 +9,7 @@
             <field name="res_model">todo.task</field>
             <field name="view_type">form</field>
             <field name="view_mode">tree,form</field>
-            <field name="domain">[('task_state','!=','cancel')]</field>
+            <field name="domain"></field>
             <field name="target">current</field>
         </record>
 
@@ -44,17 +44,17 @@
             <field name="res_model">res.groups</field>
             <field name="view_type">form</field>
             <field name="view_mode">tree,form</field>
-            <field name="domain">[('category_id','=',63)]</field>
+            <field name="domain">[('full_name','ilike','待办事项')]</field>
             <field name="target">current</field>
         </record>
 
-        <record id="action_mark_todo_task_done" model="ir.actions.server">
-            <field name="name">关闭所选待办</field>
-            <field name="model_id" ref="model_todo_task"/>
-            <field name="binding_model_id" ref="model_todo_task"/>
-            <field name="state">code</field>
-            <field name="code">records.action_cancel()</field>
-        </record>
+<!--        <record id="action_mark_todo_task_done" model="ir.actions.server">-->
+<!--            <field name="name">关闭所选待办</field>-->
+<!--            <field name="model_id" ref="model_todo_task"/>-->
+<!--            <field name="binding_model_id" ref="model_todo_task"/>-->
+<!--            <field name="state">code</field>-->
+<!--            <field name="code">records.action_cancel()</field>-->
+<!--        </record>-->
 
         <record id="action_mark_todo_task_permit" model="ir.actions.server">
             <field name="name">审核所选待办</field>

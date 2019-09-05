@@ -88,7 +88,10 @@ class TodoTask(models.Model):
 
     @api.multi
     def action_cancel(self):
-        self.write({'task_state': 'cancel'})
+        users_group = self.env['res.groups'].search([('name', '=', '管理员')]).users
+        for ids in users_group:
+            if self._uid == ids.id:
+                self.write({'task_state': 'cancel'})
 
     @api.multi
     def action_nopermit(self):
@@ -96,13 +99,15 @@ class TodoTask(models.Model):
 
     @api.multi
     def action_permitted(self):
-        for record in self:
-            if record.request_permit:
-                self.write({'permit_state': 'permitted'})
-                self.action_permit()
+        users_group = self.env['res.groups'].search([('name', '=', '管理员')]).users
+        for ids in users_group:
+            if self._uid == ids.id:
+                for record in self:
+                    if record.request_permit:
+                        self.write({'permit_state': 'permitted'})
+                        self.action_permit()
             else:
-                raise UserError('执行人还没提交完成呢, 错误项的标题为：%s' % self.name)
-                pass
+                raise UserError('你没有权限')
 
     @api.multi
     def action_refuse(self):
@@ -132,7 +137,7 @@ class TodoCategory(models.Model):
     _description = '分类列表'
 
     name = fields.Char(u'分类名')
-    task_ids = fields.Many2one('todo.task', string='待办事项')
+    task_ids = fields.One2many('todo.task', string='待办事项')
     count = fields.Integer(u'任务数量', compute='_compute_task_count')
 
     @api.depends('task_ids')
