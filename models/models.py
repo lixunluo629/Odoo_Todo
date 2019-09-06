@@ -137,7 +137,7 @@ class TodoCategory(models.Model):
     _description = '分类列表'
 
     name = fields.Char(u'分类名')
-    task_ids = fields.One2many('todo.task', string='待办事项')
+    task_ids = fields.Many2one('todo.task', string='待办事项')
     count = fields.Integer(u'任务数量', compute='_compute_task_count')
 
     @api.depends('task_ids')
