@@ -6,6 +6,7 @@ from odoo.exceptions import UserError
 
 class TodoTask(models.Model):
     _name = 'todo.task'
+    _inherit = 'mail.thread'
     _description = '我的待办'
 
     name = fields.Char(u'标题')
@@ -99,15 +100,17 @@ class TodoTask(models.Model):
 
     @api.multi
     def action_permitted(self):
-        users_group = self.env['res.groups'].search([('name', '=', '管理员')]).users
-        for ids in users_group:
-            if self._uid == ids.id:
-                for record in self:
-                    if record.request_permit:
-                        self.write({'permit_state': 'permitted'})
-                        self.action_permit()
-            else:
-                raise UserError('你没有权限')
+        users_group = self.env['res.groups'].search([('full_name', 'ilike', '待办事项 / 管理员')]).users
+        ids = []
+        for user in users_group:
+            ids.append(user.id)
+        if self._uid in ids:
+            for record in self:
+                if record.request_permit:
+                    self.write({'permit_state': 'permitted'})
+                    self.action_permit()
+        else:
+            raise UserError('你没有权限')
 
     @api.multi
     def action_refuse(self):
