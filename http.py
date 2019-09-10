@@ -280,15 +280,13 @@ class WebRequest(object):
         _request_stack.pop()
 
         if self._cr:
-            try:
-                if exc_type is None and not self._failed:
-                    self._cr.commit()
-                    if self.registry:
-                        self.registry.signal_changes()
-                elif self.registry:
-                    self.registry.reset_changes()
-            finally:
-                self._cr.close()
+            if exc_type is None and not self._failed:
+                self._cr.commit()
+                if self.registry:
+                    self.registry.signal_changes()
+            elif self.registry:
+                self.registry.reset_changes()
+            self._cr.close()
         # just to be sure no one tries to re-use the request
         self.disable_db = True
         self.uid = None
@@ -304,7 +302,7 @@ class WebRequest(object):
     def _handle_exception(self, exception):
         """Called within an except block to allow converting exceptions
            to abitrary responses. Anything returned (except None) will
-           be used as response.""" 
+           be used as response."""
         self._failed = exception # prevent tx commit
         if not isinstance(exception, NO_POSTMORTEM) \
                 and not isinstance(exception, werkzeug.exceptions.HTTPException):
@@ -589,7 +587,7 @@ class JsonRequest(WebRequest):
         self.jsonp = jsonp
         request = None
         request_id = args.get('id')
-        
+
         if jsonp and self.httprequest.method == 'POST':
             # jsonp 2 steps step1 POST: save call
             def handler():
@@ -627,6 +625,10 @@ class JsonRequest(WebRequest):
             'jsonrpc': '2.0',
             'id': self.jsonrequest.get('id')
             }
+        if isinstance(result, dict) and result is not None and result.get('json'):
+            mime = 'application/json'
+            body = json.dumps(result.get('data'))
+            return Response(body, status=200, headers=[('Content-Type', mime), ('Content-Length', len(body))])
         if error is not None:
             response['error'] = error
         if result is not None:
